@@ -79,10 +79,8 @@ class BuiltinPackageDownloader(writeToJson: Boolean = false) {
 
     logger.info("[Ruby]: Writing type information to files")
 
-    if writeToJson then
-      writeToFileJson(typesMap)
-    else
-      writeToFile(typesMap)
+    if writeToJson then writeToFileJson(typesMap)
+    else writeToFile(typesMap)
 
     logger.info("[Ruby]: FINISHED")
   }
