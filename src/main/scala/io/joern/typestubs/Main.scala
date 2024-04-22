@@ -63,7 +63,6 @@ object Main {
   }
 
   def run(config: Config): Unit = {
-    println(config)
     if config.languageFrontend == "all" || config.languageFrontend == "ruby" then
       val rubyScraper = BuiltinPackageDownloader(writeToJson = config.writeToJson)
       rubyScraper.run()
