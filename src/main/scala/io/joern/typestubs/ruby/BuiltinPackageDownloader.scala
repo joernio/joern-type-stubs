@@ -1,8 +1,9 @@
 package io.joern.typestubs.ruby
 
 import better.files.File
-import io.joern.rubysrc2cpg.datastructures.{RubyMethod, RubyType}
+//import io.joern.rubysrc2cpg.datastructures.{RubyMethod, RubyType}
 import io.joern.x2cpg.Defines
+import io.joern.x2cpg.datastructures.{FieldLike, MethodLike, TypeLike}
 import io.joern.x2cpg.utils.ConcurrentTaskUtil
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL.*
@@ -10,7 +11,33 @@ import net.ruippeixotog.scalascraper.dsl.DSL.Extract.*
 import net.ruippeixotog.scalascraper.model.Element
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.annotation.targetName
 import scala.util.{Failure, Success}
+
+import upickle.default.ReadWriter
+
+// TODO: Remove when the ReadWriter changes are released on Joern
+case class RubyMethod(
+                       name: String,
+                       parameterTypes: List[(String, String)],
+                       returnType: String,
+                       baseTypeFullName: Option[String]
+                     ) extends MethodLike derives ReadWriter
+
+case class RubyField(name: String, typeName: String) extends FieldLike derives ReadWriter
+
+case class RubyType(name: String, methods: List[RubyMethod], fields: List[RubyField])
+  extends TypeLike[RubyMethod, RubyField] derives ReadWriter {
+
+  @targetName("add")
+  override def +(o: TypeLike[RubyMethod, RubyField]): TypeLike[RubyMethod, RubyField] = {
+    this.copy(methods = mergeMethods(o), fields = mergeFields(o))
+  }
+
+  def hasConstructor: Boolean = {
+    methods.exists(_.name == Defines.ConstructorMethodName)
+  }
+}
 
 /** Class to scrape and generate Ruby Namespace Map for builtin Ruby packages from https://ruby-doc.org
   * @param rubyVersion
@@ -110,8 +137,8 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
       val typesFile = File(s"${dir.pathAsString}/$gem.mpk")
       typesFile.createIfNotExists()
 
-//      val msg: upack.Msg = upickle.default.writeMsg(gemsMap)
-//      typesFile.writeByteArray(upack.writeToByteArray(msg))
+      val msg: upack.Msg = upickle.default.writeMsg(gemsMap)
+      typesFile.writeByteArray(upack.writeToByteArray(msg))
     }
 
     dir.zipTo(destination = File(s"${baseDir}.zip"))
@@ -144,7 +171,7 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
       val typesFile = File(s"${dir.pathAsString}/$gem.json")
       typesFile.createIfNotExists()
 
-//      typesFile.write(upickle.default.write(gemsMap, indent = 2))
+      typesFile.write(upickle.default.write(gemsMap, indent = 2))
     }
 
     dir.zipTo(destination = File(s"${baseDir}_json.zip"))
