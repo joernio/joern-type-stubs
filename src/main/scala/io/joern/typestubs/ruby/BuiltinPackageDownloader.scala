@@ -130,7 +130,7 @@ class BuiltinPackageDownloader(format: OutputFormat.Value = OutputFormat.zip) {
     rubyTypesMap.foreach { (gem, rubyTypes) =>
       val gemsMap = genGemToRubyTypesMap(rubyTypes)
 
-      val typesFile = File(s"${dir.pathAsString}/$gem.mpk")
+      val typesFile = dir / s"$gem.mpk"
       typesFile.createIfNotExists()
 
       val msg: upack.Msg = upickle.default.writeMsg(gemsMap)
@@ -153,7 +153,7 @@ class BuiltinPackageDownloader(format: OutputFormat.Value = OutputFormat.zip) {
     rubyTypesMap.foreach { (gem, rubyTypes) =>
       val gemsMap = genGemToRubyTypesMap(rubyTypes)
 
-      val typesFile = File(s"${dir.pathAsString}/$gem.json")
+      val typesFile = dir / s"$gem.json"
       typesFile.createIfNotExists()
 
       typesFile.write(upickle.default.write(gemsMap, indent = 2))
