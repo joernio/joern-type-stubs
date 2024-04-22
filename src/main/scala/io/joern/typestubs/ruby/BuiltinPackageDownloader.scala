@@ -1,7 +1,6 @@
 package io.joern.typestubs.ruby
 
 import better.files.File
-//import io.joern.rubysrc2cpg.datastructures.{RubyMethod, RubyType}
 import io.joern.x2cpg.Defines
 import io.joern.x2cpg.datastructures.{FieldLike, MethodLike, TypeLike}
 import io.joern.x2cpg.utils.ConcurrentTaskUtil
@@ -52,13 +51,14 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
   private val browser = JsoupBrowser()
   private val baseUrl = s"https://ruby-doc.org/$rubyVersion"
 
-  private val baseDir = "src/main/resources/builtin_types"
+  private val baseDir = "src/main/resources/ruby/builtin_types"
 
   // Below unicode value caluclated with: println("\\u" + Integer.toHexString('→' | 0x10000).substring(1))
   // taken from: https://stackoverflow.com/questions/2220366/get-unicode-value-of-a-character
   private val arrowUnicodeValue = "\\u2192"
 
   def run(): Unit = {
+    logger.debug("[Ruby]: Starting scraping")
     val builtinDir = File(baseDir)
     builtinDir.createDirectoryIfNotExists()
 
@@ -77,7 +77,10 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
       }
 
     writeToFileJson(typesMap)
+
+    logger.debug("[Ruby]: Writing type information to .mpk files")
     writeToFile(typesMap)
+    logger.debug("[Ruby]: FINISHED")
   }
 
   /** Generates a `RubyType` for each class/module in each gem
@@ -90,6 +93,7 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
     pathsMap
       .map((gemName, paths) =>
         () => {
+          logger.debug(s"[Ruby]: Generating types for gem: $gemName")
           val rubyTypes = paths.map { path =>
             val doc = browser.get(path)
 
@@ -174,6 +178,7 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
       typesFile.write(upickle.default.write(gemsMap, indent = 2))
     }
 
+    logger.debug("[Ruby]: Zipping builtin-type dir")
     dir.zipTo(destination = File(s"${baseDir}_json.zip"))
     dir.delete()
   }
