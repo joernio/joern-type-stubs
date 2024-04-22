@@ -17,16 +17,17 @@ import upickle.default.ReadWriter
 
 // TODO: Remove when the ReadWriter changes are released on Joern
 case class RubyMethod(
-                       name: String,
-                       parameterTypes: List[(String, String)],
-                       returnType: String,
-                       baseTypeFullName: Option[String]
-                     ) extends MethodLike derives ReadWriter
+  name: String,
+  parameterTypes: List[(String, String)],
+  returnType: String,
+  baseTypeFullName: Option[String]
+) extends MethodLike
+    derives ReadWriter
 
 case class RubyField(name: String, typeName: String) extends FieldLike derives ReadWriter
 
 case class RubyType(name: String, methods: List[RubyMethod], fields: List[RubyField])
-  extends TypeLike[RubyMethod, RubyField] derives ReadWriter {
+    extends TypeLike[RubyMethod, RubyField] derives ReadWriter {
 
   @targetName("add")
   override def +(o: TypeLike[RubyMethod, RubyField]): TypeLike[RubyMethod, RubyField] = {
