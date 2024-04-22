@@ -1,22 +1,23 @@
 name := "joern-type-stubs"
 ThisBuild / organization := "io.joern"
-ThisBuild / scalaVersion := "3.3.1"
+ThisBuild / scalaVersion := "3.4.1"
 
 // parsed by project/Versions.scala, updated by updateDependencies.sh
-val cpgVersion = "1.6.10"
-val joernVersion = "2.0.310"
-val overflowdbVersion = "1.190"
+val cpgVersion = "1.6.11"
+val joernVersion = "2.0.339"
+val overflowdbVersion = "1.191"
 
 libraryDependencies ++= Seq(
-  "com.github.pathikrit" %% "better-files" % "3.9.2",
-  "com.github.scopt" %% "scopt" % "4.1.0",
-  "org.apache.logging.log4j" % "log4j-slf4j2-impl" % "2.20.0" % Optional,
+  "com.github.pathikrit" %% "better-files" % Versions.betterFiles,
+  "com.github.scopt" %% "scopt" % Versions.scopt,
+  "org.apache.logging.log4j" % "log4j-slf4j2-impl" % Versions.log4j % Optional,
   "io.joern" %% "x2cpg" % Versions.joern,
   "io.joern" %% "rubysrc2cpg" % Versions.joern,
   "io.joern" %% "joern-cli" % Versions.joern,
   "io.joern" %% "semanticcpg" % Versions.joern,
   "io.joern" %% "semanticcpg" % Versions.joern % Test classifier "tests",
-  "org.scalatest" %% "scalatest" % "3.2.16" % Test
+  "net.ruippeixotog" %% "scala-scraper" % Versions.scalaScraper,
+  "org.scalatest" %% "scalatest" % Versions.scalatest % Test
 )
 
 // mostly so that `sbt assembly` works, but also to ensure that we don't end up

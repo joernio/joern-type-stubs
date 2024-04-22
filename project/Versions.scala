@@ -3,6 +3,12 @@ object Versions {
   val joern = parseVersion("joernVersion")
   val overflowdb = parseVersion("overflowdbVersion")
 
+  val scalatest = "3.2.16"
+  val betterFiles = "3.9.2"
+  val scopt = "4.1.0"
+  val log4j = "2.20.0"
+  val scalaScraper = "3.1.1"
+
   private def parseVersion(key: String): String = { 
     val versionRegexp = s""".*val $key[ ]+=[ ]?"(.*?)"""".r
     val versions: List[String] = scala.io.Source
