@@ -144,9 +144,6 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
       val msg: upack.Msg = upickle.default.writeMsg(gemsMap)
       typesFile.writeByteArray(upack.writeToByteArray(msg))
     }
-
-    dir.zipTo(destination = File(s"${baseDir}.zip"))
-    dir.delete()
   }
 
   // TODO: Remove before merging to master at a later stage
