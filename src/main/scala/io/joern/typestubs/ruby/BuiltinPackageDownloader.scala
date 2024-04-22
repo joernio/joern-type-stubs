@@ -1,6 +1,7 @@
 package io.joern.typestubs.ruby
 
 import better.files.File
+import io.joern.typestubs.OutputFormat
 import io.joern.x2cpg.Defines
 import io.joern.x2cpg.datastructures.{FieldLike, MethodLike, TypeLike}
 import io.joern.x2cpg.utils.ConcurrentTaskUtil
@@ -12,7 +13,6 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.annotation.targetName
 import scala.util.{Failure, Success}
-
 import upickle.default.ReadWriter
 
 // TODO: Remove when the ReadWriter changes are released on Joern
@@ -43,7 +43,7 @@ case class RubyType(name: String, methods: List[RubyMethod], fields: List[RubyFi
   * @param rubyVersion
   *   \- Ruby version to fetch dependencies for
   */
-class BuiltinPackageDownloader(writeToJson: Boolean = false) {
+class BuiltinPackageDownloader(format: OutputFormat.Value = OutputFormat.zip) {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private val CLASS    = "class"
@@ -52,7 +52,7 @@ class BuiltinPackageDownloader(writeToJson: Boolean = false) {
   private val browser = JsoupBrowser()
   private val baseUrl = s"https://ruby-doc.org/3.3.0"
 
-  private val baseDir = "src/main/resources/ruby/builtin_types"
+  private val baseDir = "src/main/resources/ruby/builtin_types/"
 
   // Below unicode value calculated with: println("\\u" + Integer.toHexString('→' | 0x10000).substring(1))
   // taken from: https://stackoverflow.com/questions/2220366/get-unicode-value-of-a-character
@@ -79,7 +79,7 @@ class BuiltinPackageDownloader(writeToJson: Boolean = false) {
 
     logger.info("[Ruby]: Writing type information to files")
 
-    if writeToJson then writeToFileJson(typesMap)
+    if format == OutputFormat.json then writeToFileJson(typesMap)
     else writeToFile(typesMap)
 
     logger.info("[Ruby]: FINISHED")
@@ -124,7 +124,7 @@ class BuiltinPackageDownloader(writeToJson: Boolean = false) {
     *   \- Map(Gemname -> List[RubyTypes for Gem])
     */
   private def writeToFile(rubyTypesMap: collection.mutable.Map[String, List[RubyType]]): Unit = {
-    val dir = File(s"${baseDir}/")
+    val dir = File(baseDir)
     dir.createDirectoryIfNotExists()
 
     rubyTypesMap.foreach { (gem, rubyTypes) =>
@@ -147,7 +147,7 @@ class BuiltinPackageDownloader(writeToJson: Boolean = false) {
     *   \- Map(Gemname -> List[RubyTypes for Gem])
     */
   private def writeToFileJson(rubyTypesMap: collection.mutable.Map[String, List[RubyType]]): Unit = {
-    val dir = File(s"${baseDir}_json/")
+    val dir = File(baseDir)
     dir.createDirectoryIfNotExists()
 
     rubyTypesMap.foreach { (gem, rubyTypes) =>

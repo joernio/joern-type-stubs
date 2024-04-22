@@ -1,12 +1,17 @@
 package io.joern.typestubs
 
 import io.joern.typestubs.ruby.BuiltinPackageDownloader
+import io.shiftleft.codepropertygraph.generated.Languages
 import scopt.OParser
 
-final case class Config(writeToJson: Boolean = false, languageFrontend: String = "all") {
+object OutputFormat extends Enumeration {
+  val json, mpk, zip = Value
+}
 
-  def writeToJson(value: Boolean): Config = {
-    copy(writeToJson = value)
+final case class Config(format: OutputFormat.Value = OutputFormat.zip, languageFrontend: String = "all") {
+
+  def withFormat(value: OutputFormat.Value): Config = {
+    copy(format = value)
   }
 
   def withLanguageFrontend(value: String): Config = {
@@ -16,18 +21,22 @@ final case class Config(writeToJson: Boolean = false, languageFrontend: String =
 
 private object Frontend {
 
+  val ALL = "ALL"
+
   implicit val defaultConfig: Config = Config()
 
+  implicit val outputFormatR: scopt.Read[OutputFormat.Value] = scopt.Read.reads(OutputFormat withName _)
+
   val cmdLineParser: OParser[Unit, Config] = {
-    val availableFrontendLanguages = Seq("", "ruby", "chsarp", "all")
+    val availableFrontendLanguages = Seq(ALL, Languages.RUBYSRC, Languages.CSHARP)
 
     val builder = OParser.builder[Config]
     import builder.*
     OParser.sequence(
       programName("joern-type-stubs"),
-      opt[Unit]("writeToJson")
-        .action((_, c) => c.writeToJson(true))
-        .text("Write builtin types to JSON files without zipping, instead of MessagePack files with a zipped folder"),
+      opt[OutputFormat.Value]("format")
+        .action((x, c) => c.withFormat(x))
+        .text(s"Format to write type-stubs to: [${OutputFormat.ValueSet().mkString(",")}]"),
       opt[String]("withLanguageFrontend")
         .action((x, c) => c.withLanguageFrontend(x))
         .validate {
@@ -35,11 +44,8 @@ private object Frontend {
           case x if !availableFrontendLanguages.contains(x) =>
             failure(s"Only available languages are: [${availableFrontendLanguages.mkString(", ")}]")
         }
-        .text("""The Frontend Language to generate builtin types for, defaults to `all`:
-            |ruby -> Ruby
-            |csharp -> C#
-            |all -> All of the above languages
-            |""".stripMargin)
+        .text(s"The Frontend Language to generate builtin types for, defaults to `all`: [${availableFrontendLanguages
+                .mkString(",")}]".stripMargin)
     )
   }
 }
@@ -63,8 +69,8 @@ object Main {
   }
 
   def run(config: Config): Unit = {
-    if config.languageFrontend == "all" || config.languageFrontend == "ruby" then
-      val rubyScraper = BuiltinPackageDownloader(writeToJson = config.writeToJson)
+    if config.languageFrontend == Frontend.ALL || config.languageFrontend == Languages.RUBYSRC then
+      val rubyScraper = BuiltinPackageDownloader(format = config.format)
       rubyScraper.run()
   }
 }
