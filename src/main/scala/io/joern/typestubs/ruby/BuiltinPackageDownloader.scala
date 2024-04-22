@@ -1,6 +1,7 @@
 package io.joern.typestubs.ruby
 
 import better.files.File
+import io.joern.typestubs.OutputFormat
 import io.joern.x2cpg.Defines
 import io.joern.x2cpg.datastructures.{FieldLike, MethodLike, TypeLike}
 import io.joern.x2cpg.utils.ConcurrentTaskUtil
@@ -12,7 +13,6 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.annotation.targetName
 import scala.util.{Failure, Success}
-
 import upickle.default.ReadWriter
 
 // TODO: Remove when the ReadWriter changes are released on Joern
@@ -43,23 +43,23 @@ case class RubyType(name: String, methods: List[RubyMethod], fields: List[RubyFi
   * @param rubyVersion
   *   \- Ruby version to fetch dependencies for
   */
-class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
+class BuiltinPackageDownloader(format: OutputFormat.Value = OutputFormat.zip) {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private val CLASS    = "class"
   private val INSTANCE = "instance"
 
   private val browser = JsoupBrowser()
-  private val baseUrl = s"https://ruby-doc.org/$rubyVersion"
+  private val baseUrl = s"https://ruby-doc.org/3.3.0"
 
-  private val baseDir = "src/main/resources/ruby/builtin_types"
+  private val baseDir = "src/main/resources/ruby/builtin_types/"
 
-  // Below unicode value caluclated with: println("\\u" + Integer.toHexString('→' | 0x10000).substring(1))
+  // Below unicode value calculated with: println("\\u" + Integer.toHexString('→' | 0x10000).substring(1))
   // taken from: https://stackoverflow.com/questions/2220366/get-unicode-value-of-a-character
   private val arrowUnicodeValue = "\\u2192"
 
   def run(): Unit = {
-    logger.debug("[Ruby]: Starting scraping")
+    logger.info("[Ruby]: Starting scraping")
     val builtinDir = File(baseDir)
     builtinDir.createDirectoryIfNotExists()
 
@@ -77,11 +77,12 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
           None
       }
 
-    writeToFileJson(typesMap)
+    logger.info("[Ruby]: Writing type information to files")
 
-    logger.debug("[Ruby]: Writing type information to .mpk files")
-    writeToFile(typesMap)
-    logger.debug("[Ruby]: FINISHED")
+    if format == OutputFormat.json then writeToFileJson(typesMap)
+    else writeToFile(typesMap)
+
+    logger.info("[Ruby]: FINISHED")
   }
 
   /** Generates a `RubyType` for each class/module in each gem
@@ -91,6 +92,7 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
   private def generateRubyTypes(
     pathsMap: collection.mutable.Map[String, List[String]]
   ): Iterator[() => (String, List[RubyType])] = {
+    logger.info("[Ruby]: Generating Ruby Types for builtin functions")
     pathsMap
       .map((gemName, paths) =>
         () => {
@@ -117,68 +119,46 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
       .iterator
   }
 
+  /** Write RubyType for builtin types to MessagePack files and zipping directory
+    * @param rubyTypesMap
+    *   \- Map(Gemname -> List[RubyTypes for Gem])
+    */
   private def writeToFile(rubyTypesMap: collection.mutable.Map[String, List[RubyType]]): Unit = {
-    val dir = File(s"${baseDir}/")
+    val dir = File(baseDir)
     dir.createDirectoryIfNotExists()
 
     rubyTypesMap.foreach { (gem, rubyTypes) =>
-      // gem is file name
-      val gemsMap = collection.mutable.Map[String, List[RubyType]]()
+      val gemsMap = genGemToRubyTypesMap(rubyTypes)
 
-      rubyTypes.foreach { rubyType =>
-        val rubyTypeNameSegments = rubyType.name.split("\\.")
-
-        val namespaceKey = rubyTypeNameSegments.size match {
-          case x if x == 1 =>
-            ""
-          case x if x > 1 =>
-            rubyTypeNameSegments.take(x - 1).mkString(".")
-        }
-
-        if gemsMap.contains(namespaceKey) then gemsMap.update(namespaceKey, gemsMap(namespaceKey) :+ rubyType)
-        else gemsMap.put(namespaceKey, List(rubyType))
-      }
-
-      val typesFile = File(s"${dir.pathAsString}/$gem.mpk")
+      val typesFile = dir / s"$gem.mpk"
       typesFile.createIfNotExists()
 
       val msg: upack.Msg = upickle.default.writeMsg(gemsMap)
       typesFile.writeByteArray(upack.writeToByteArray(msg))
     }
+
+    logger.debug("[Ruby]: Zipping builtin-type dir")
+    dir.zipTo(destination = File(s"${baseDir}.zip"))
+    dir.delete()
   }
 
-  // TODO: Remove before merging to master at a later stage
+  /** Write RubyTypes to JSON files for debugging a readable format
+    * @param rubyTypesMap
+    *   \- Map(Gemname -> List[RubyTypes for Gem])
+    */
   private def writeToFileJson(rubyTypesMap: collection.mutable.Map[String, List[RubyType]]): Unit = {
-    val dir = File(s"${baseDir}_json/")
+    val dir = File(baseDir)
     dir.createDirectoryIfNotExists()
 
     rubyTypesMap.foreach { (gem, rubyTypes) =>
-      // gem is file name
-      val gemsMap = collection.mutable.Map[String, List[RubyType]]()
+      val gemsMap = genGemToRubyTypesMap(rubyTypes)
 
-      rubyTypes.foreach { rubyType =>
-        val rubyTypeNameSegments = rubyType.name.split("\\.")
-
-        val namespaceKey = rubyTypeNameSegments.size match {
-          case x if x == 1 =>
-            ""
-          case x if x > 1 =>
-            rubyTypeNameSegments.take(x - 1).mkString(".")
-        }
-
-        if gemsMap.contains(namespaceKey) then gemsMap.update(namespaceKey, gemsMap(namespaceKey) ++ List(rubyType))
-        else gemsMap.put(namespaceKey, List(rubyType))
-      }
-
-      val typesFile = File(s"${dir.pathAsString}/$gem.json")
+      val typesFile = dir / s"$gem.json"
       typesFile.createIfNotExists()
 
       typesFile.write(upickle.default.write(gemsMap, indent = 2))
     }
 
-    logger.debug("[Ruby]: Zipping builtin-type dir")
-    dir.zipTo(destination = File(s"${baseDir}_json.zip"))
-    dir.delete()
   }
 
   /** Scrapes the given RubyDoc page and generates a `RubyMethod` for each public class and instance method found
@@ -257,5 +237,26 @@ class BuiltinPackageDownloader(rubyVersion: String = "3.3.0") {
     }
 
     linksMap
+  }
+
+  private def genGemToRubyTypesMap(rubyTypes: List[RubyType]): collection.mutable.Map[String, List[RubyType]] = {
+    // gem is file name
+    val gemsMap = collection.mutable.Map[String, List[RubyType]]()
+
+    rubyTypes.foreach { rubyType =>
+      val rubyTypeNameSegments = rubyType.name.split("\\.")
+
+      val namespaceKey = rubyTypeNameSegments.size match {
+        case x if x == 1 =>
+          ""
+        case x if x > 1 =>
+          rubyTypeNameSegments.take(x - 1).mkString(".")
+      }
+
+      if gemsMap.contains(namespaceKey) then gemsMap.update(namespaceKey, gemsMap(namespaceKey) :+ rubyType)
+      else gemsMap.put(namespaceKey, List(rubyType))
+    }
+
+    gemsMap
   }
 }

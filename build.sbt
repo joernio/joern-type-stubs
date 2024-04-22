@@ -7,6 +7,11 @@ val cpgVersion = "1.6.11"
 val joernVersion = "2.0.339"
 val overflowdbVersion = "1.191"
 
+lazy val schema = Projects.schema
+lazy val domainClasses = Projects.domainClasses
+
+dependsOn(domainClasses)
+
 libraryDependencies ++= Seq(
   "com.github.pathikrit" %% "better-files" % Versions.betterFiles,
   "com.github.scopt" %% "scopt" % Versions.scopt,
