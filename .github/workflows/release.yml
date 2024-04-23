@@ -40,11 +40,11 @@ jobs:
       - name: Generate Ruby Types
         run: ./standalone --withLanguageFrontend RUBYSRC 
       - name: Checksum
-        run: sha512sum src/main/resources/ruby/builtin_types.zip > src/main/resources/ruby/builtin_types.zip.sha512
+        run: sha512sum builtin_types/ruby_builtin_types.zip > builtin_types/ruby_builtin_types.zip.sha512
       - name: Rename
         run: |
-          mv src/main/resources/ruby/builtin_types.zip ruby_builtin_types.zip
-          mv src/main/resources/ruby/builtin_types.zip.sha512 ruby_builtin_types.zip.sha512
+          mv builtin_types/ruby_builtin_types.zip ruby_builtin_types.zip
+          mv builtin_types/ruby_builtin_types.zip.sha512 ruby_builtin_types.zip.sha512
       - name: Show SHA512
         run: cat ruby_builtin_types.zip.sha512 
       - name: Set next release version

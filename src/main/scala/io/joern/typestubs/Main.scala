@@ -8,7 +8,7 @@ object OutputFormat extends Enumeration {
   val json, mpk, zip = Value
 }
 
-final case class Config(format: OutputFormat.Value = OutputFormat.zip, languageFrontend: String = Frontend.ALL) {
+final case class Config(format: OutputFormat.Value = OutputFormat.zip, languageFrontend: String = Frontend.ALL, outputDirectory: String = "./builtin_types") {
 
   def withFormat(value: OutputFormat.Value): Config = {
     copy(format = value)
@@ -16,6 +16,10 @@ final case class Config(format: OutputFormat.Value = OutputFormat.zip, languageF
 
   def withLanguageFrontend(value: String): Config = {
     copy(languageFrontend = value)
+  }
+
+  def withOutputDirectory(value: String): Config = {
+    copy(outputDirectory = value)
   }
 }
 
@@ -45,7 +49,10 @@ private object Frontend {
             failure(s"Only available languages are: [${availableFrontendLanguages.mkString(", ")}]")
         }
         .text(s"The Frontend Language to generate builtin types for, defaults to `all`: [${availableFrontendLanguages
-                .mkString(",")}]".stripMargin)
+                .mkString(",")}]".stripMargin),
+      opt[String]("output")
+        .action((x, c) => c.withOutputDirectory(x))
+        .text("Directory for type-stubs output")
     )
   }
 }
@@ -70,7 +77,7 @@ object Main {
 
   def run(config: Config): Unit = {
     if config.languageFrontend == Frontend.ALL || config.languageFrontend == Languages.RUBYSRC then
-      val rubyScraper = BuiltinPackageDownloader(format = config.format)
+      val rubyScraper = BuiltinPackageDownloader(outputDir = config.outputDirectory, format = config.format)
       rubyScraper.run()
   }
 }
