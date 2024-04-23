@@ -13,7 +13,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.annotation.targetName
 import scala.util.{Failure, Success}
-import upickle.default.ReadWriter
+import upickle.default.*
 
 // TODO: Remove when the ReadWriter changes are released on Joern
 case class RubyMethod(
@@ -22,7 +22,13 @@ case class RubyMethod(
   returnType: String,
   baseTypeFullName: Option[String]
 ) extends MethodLike
-    derives ReadWriter
+
+object RubyMethod {
+  implicit val rubyMethodRwJson: ReadWriter[RubyMethod] = readwriter[ujson.Value].bimap[RubyMethod](
+    x => ujson.Obj("name" -> x.name),
+    json => RubyMethod(json("name").str, List.empty, "", Option.empty)
+  )
+}
 
 case class RubyField(name: String, typeName: String) extends FieldLike derives ReadWriter
 
@@ -188,7 +194,10 @@ class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = O
         funcNameRegex.findFirstMatchIn(method) match {
           case Some(methodName) =>
             // Some methods are `methodName == something`, which is why the split on space here is required
-            s"${methodName.toString.replaceAll("[!?=]", "").split("\\s+")(0).strip}"
+            val parsedMethodName = s"${methodName.toString.replaceAll("[!?=]", "").split("\\s+")(0).strip}"
+
+            if parsedMethodName == "new" then Defines.ConstructorMethodName
+            else parsedMethodName
           case None => ""
         }
       }
