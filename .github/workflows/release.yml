@@ -44,7 +44,7 @@ jobs:
       - name: Rename
         run: |
           mv src/main/resources/ruby/builtin_types.zip ruby_builtin_types.zip
-          mv src/main/resources/ruby/builtin_types.zip.sha512 ruby_builtin_types.zip.sha521
+          mv src/main/resources/ruby/builtin_types.zip.sha512 ruby_builtin_types.zip.sha512
       - name: Show SHA512
         run: cat ruby_builtin_types.zip.sha512 
       - name: Set next release version
