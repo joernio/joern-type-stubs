@@ -197,8 +197,7 @@ class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = O
             // Some methods are `methodName == something`, which is why the split on space here is required
             val parsedMethodName = s"${methodName.toString.replaceAll("[!?=]", "").split("\\s+")(0).strip}"
 
-            if parsedMethodName == "new" then
-              Defines.ConstructorMethodName
+            if parsedMethodName == "new" then Defines.ConstructorMethodName
             else parsedMethodName
           case None => ""
         }
