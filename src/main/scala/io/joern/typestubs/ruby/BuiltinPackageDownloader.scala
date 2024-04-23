@@ -137,9 +137,8 @@ class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = O
       typesFile.writeByteArray(upack.writeToByteArray(msg))
     }
 
-    logger.debug("[Ruby]: Zipping builtin-type dir")
-
     if format == OutputFormat.zip then
+      logger.debug("[Ruby]: Zipping builtin-type dir")
       dir.zipTo(destination = File(s"${baseDir}.zip"))
       dir.delete()
   }
