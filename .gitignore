@@ -5,3 +5,4 @@ target/
 /joern-inst
 /workspace
 src/main/resources/
+builtin_types/
