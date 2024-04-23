@@ -1,7 +1,7 @@
 name: release
 on:
   push:
-    branches: [master, main, 'andrei/workflows/ruby-downloader']
+    branches: [master, main]
     tags: ["*"]
     paths-ignore: ['**.md']
   workflow_dispatch: #allows manual trigger
