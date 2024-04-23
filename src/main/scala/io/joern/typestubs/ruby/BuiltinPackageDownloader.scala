@@ -99,8 +99,9 @@ class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = O
     pathsMap: collection.mutable.Map[String, List[String]]
   ): Iterator[() => (String, List[RubyType])] = {
     logger.info("[Ruby]: Generating Ruby Types for builtin functions")
+    // TODO: Add config item to run on a subset for debugging.
+
     pathsMap
-      .slice(0, 5)
       .map((gemName, paths) =>
         () => {
           logger.debug(s"[Ruby]: Generating types for gem: $gemName")
