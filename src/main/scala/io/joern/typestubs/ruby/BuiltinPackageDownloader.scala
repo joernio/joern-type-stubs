@@ -52,7 +52,7 @@ class BuiltinPackageDownloader(format: OutputFormat.Value = OutputFormat.zip) {
   private val browser = JsoupBrowser()
   private val baseUrl = s"https://ruby-doc.org/3.3.0"
 
-  private val baseDir = "src/main/resources/ruby/builtin_types/"
+  private val baseDir = "src/main/resources/ruby/builtin_types"
 
   // Below unicode value calculated with: println("\\u" + Integer.toHexString('→' | 0x10000).substring(1))
   // taken from: https://stackoverflow.com/questions/2220366/get-unicode-value-of-a-character
