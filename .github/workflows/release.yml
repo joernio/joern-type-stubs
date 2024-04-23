@@ -43,10 +43,10 @@ jobs:
         run: sha512sum builtin_types/ruby_builtin_types.zip > builtin_types/ruby_builtin_types.zip.sha512
       - name: Rename
         run: |
-          mv builtin_types/ruby_builtin_types.zip ruby_builtin_types.zip
-          mv builtin_types/ruby_builtin_types.zip.sha512 ruby_builtin_types.zip.sha512
+          mv builtin_types/ruby_builtin_types.zip rubysrc_builtin_types.zip
+          mv builtin_types/ruby_builtin_types.zip.sha512 rubysrc_builtin_types.zip.sha512
       - name: Show SHA512
-        run: cat ruby_builtin_types.zip.sha512 
+        run: cat rubysrc_builtin_types.zip.sha512 
       - name: Set next release version
         id: taggerFinal
         uses: anothrNick/github-tag-action@1.61.0
@@ -58,5 +58,5 @@ jobs:
         with:
           tag_name: ${{ steps.taggerDryRun.outputs.new_tag }}
           files: |
-            ruby_builtin_types.zip
-            ruby_builtin_types.zip.sha512
+            rubysrc_builtin_types.zip
+            rubysrc_builtin_types.zip.sha512
