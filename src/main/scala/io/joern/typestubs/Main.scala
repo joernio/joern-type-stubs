@@ -8,7 +8,7 @@ object OutputFormat extends Enumeration {
   val json, mpk, zip = Value
 }
 
-final case class Config(format: OutputFormat.Value = OutputFormat.zip, languageFrontend: String = "all") {
+final case class Config(format: OutputFormat.Value = OutputFormat.zip, languageFrontend: String = Frontend.ALL) {
 
   def withFormat(value: OutputFormat.Value): Config = {
     copy(format = value)

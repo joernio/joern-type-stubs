@@ -40,7 +40,7 @@ jobs:
       - name: Generate Ruby Types
         run: ./standalone --withLanguageFrontend RUBYSRC --format json
       - name: List it
-        run: ls src/main/resources/ruby
+        run: ls src/main/resources/ruby/builtin_types
       # - name: Set next release version
       #   id: taggerFinal
       #   uses: anothrNick/github-tag-action@1.61.0
