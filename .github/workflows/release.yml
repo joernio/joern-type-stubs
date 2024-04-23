@@ -39,6 +39,8 @@ jobs:
         run: sbt clean stage
       - name: Generate Ruby Types
         run: ./standalone --withLanguageFrontend RUBYSRC --format json
+      - name: List it
+        run: ls src/main/resources/ruby
       # - name: Set next release version
       #   id: taggerFinal
       #   uses: anothrNick/github-tag-action@1.61.0
