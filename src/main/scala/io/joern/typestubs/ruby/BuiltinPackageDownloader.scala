@@ -3,7 +3,7 @@ package io.joern.typestubs.ruby
 import better.files.File
 import io.joern.typestubs.OutputFormat
 import io.joern.x2cpg.Defines
-import io.joern.x2cpg.datastructures.{FieldLike, MethodLike, TypeLike}
+import io.joern.rubysrc2cpg.datastructures.{RubyMethod, RubyType}
 import io.joern.x2cpg.utils.ConcurrentTaskUtil
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL.*
@@ -14,36 +14,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.annotation.targetName
 import scala.util.{Failure, Success}
 import upickle.default.*
-
-// TODO: Remove when the ReadWriter changes are released on Joern
-case class RubyMethod(
-  name: String,
-  parameterTypes: List[(String, String)],
-  returnType: String,
-  baseTypeFullName: Option[String]
-) extends MethodLike
-
-object RubyMethod {
-  implicit val rubyMethodRwJson: ReadWriter[RubyMethod] = readwriter[ujson.Value].bimap[RubyMethod](
-    x => ujson.Obj("name" -> x.name),
-    json => RubyMethod(json("name").str, List.empty, "", Option.empty)
-  )
-}
-
-case class RubyField(name: String, typeName: String) extends FieldLike derives ReadWriter
-
-case class RubyType(name: String, methods: List[RubyMethod], fields: List[RubyField])
-    extends TypeLike[RubyMethod, RubyField] derives ReadWriter {
-
-  @targetName("add")
-  override def +(o: TypeLike[RubyMethod, RubyField]): TypeLike[RubyMethod, RubyField] = {
-    this.copy(methods = mergeMethods(o), fields = mergeFields(o))
-  }
-
-  def hasConstructor: Boolean = {
-    methods.exists(_.name == Defines.ConstructorMethodName)
-  }
-}
 
 /** Class to scrape and generate Ruby Namespace Map for builtin Ruby packages from https://ruby-doc.org
   * @param rubyVersion
