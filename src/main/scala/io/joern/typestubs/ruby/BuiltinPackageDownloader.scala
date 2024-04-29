@@ -70,7 +70,6 @@ class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = O
   ): Iterator[() => (String, List[RubyType])] = {
     logger.info("[Ruby]: Generating Ruby Types for builtin functions")
     pathsMap
-      .slice(0, 20)
       .map((gemName, paths) =>
         () => {
           logger.debug(s"[Ruby]: Generating types for gem: $gemName")
