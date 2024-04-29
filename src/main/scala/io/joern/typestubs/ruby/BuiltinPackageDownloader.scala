@@ -19,7 +19,11 @@ import upickle.default.*
   * @param rubyVersion
   *   \- Ruby version to fetch dependencies for
   */
-class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = OutputFormat.zip) {
+class BuiltinPackageDownloader(
+  outputDir: String,
+  format: OutputFormat.Value = OutputFormat.zip,
+  useSubset: Boolean = false
+) {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private val CLASS    = "class"
@@ -65,11 +69,19 @@ class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = O
     * @param pathsMap
     * @return
     */
-  private def generateRubyTypes(
+  private def generateRubyTypesSet(
     pathsMap: collection.mutable.Map[String, List[String]]
   ): Iterator[() => (String, List[RubyType])] = {
     logger.info("[Ruby]: Generating Ruby Types for builtin functions")
-    pathsMap
+
+    if useSubset then generateRubyTypes(pathsMap.slice(0, 10))
+    else generateRubyTypes(pathsMap)
+  }
+
+  private def generateRubyTypes(
+    paths: collection.mutable.Map[String, List[String]]
+  ): Iterator[() => (String, List[RubyType])] = {
+    paths
       .map((gemName, paths) =>
         () => {
           logger.debug(s"[Ruby]: Generating types for gem: $gemName")
@@ -164,9 +176,10 @@ class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = O
         funcNameRegex.findFirstMatchIn(method) match {
           case Some(methodName) =>
             // Some methods are `methodName == something`, which is why the split on space here is required
-            val parsedMethodName = s"${methodName.toString.replaceAll("[!?=]", "").split("\\s+")(0).strip}"
+            val parsedMethodName =
+              s"${methodName.toString.replaceAll("[!?=]", "").replaceAll("::", ".").split("\\s+")(0).strip}"
 
-            if parsedMethodName == "new" then Defines.ConstructorMethodName
+            if parsedMethodName.endsWith("new") then Defines.ConstructorMethodName
             else parsedMethodName
           case None => ""
         }
