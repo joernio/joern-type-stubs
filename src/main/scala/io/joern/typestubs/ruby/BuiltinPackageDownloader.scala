@@ -19,7 +19,11 @@ import upickle.default.*
   * @param rubyVersion
   *   \- Ruby version to fetch dependencies for
   */
-class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = OutputFormat.zip) {
+class BuiltinPackageDownloader(
+  outputDir: String,
+  format: OutputFormat.Value = OutputFormat.zip,
+  useSubset: Boolean = false
+) {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private val CLASS    = "class"
@@ -65,11 +69,19 @@ class BuiltinPackageDownloader(outputDir: String, format: OutputFormat.Value = O
     * @param pathsMap
     * @return
     */
-  private def generateRubyTypes(
+  private def generateRubyTypesSet(
     pathsMap: collection.mutable.Map[String, List[String]]
   ): Iterator[() => (String, List[RubyType])] = {
     logger.info("[Ruby]: Generating Ruby Types for builtin functions")
-    pathsMap
+
+    if useSubset then generateRubyTypes(pathsMap.slice(0, 20))
+    else generateRubyTypes(pathsMap)
+  }
+
+  private def generateRubyTypes(
+    paths: collection.mutable.Map[String, List[String]]
+  ): Iterator[() => (String, List[RubyType])] = {
+    paths
       .map((gemName, paths) =>
         () => {
           logger.debug(s"[Ruby]: Generating types for gem: $gemName")

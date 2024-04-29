@@ -11,7 +11,8 @@ object OutputFormat extends Enumeration {
 final case class Config(
   format: OutputFormat.Value = OutputFormat.zip,
   languageFrontend: String = Frontend.ALL,
-  outputDirectory: String = "./builtin_types"
+  outputDirectory: String = "./builtin_types",
+  useSubset: Boolean = false
 ) {
 
   def withFormat(value: OutputFormat.Value): Config = {
@@ -24,6 +25,10 @@ final case class Config(
 
   def withOutputDirectory(value: String): Config = {
     copy(outputDirectory = value)
+  }
+
+  def withUseSubset(value: Boolean): Config = {
+    copy(useSubset = value)
   }
 }
 
@@ -56,7 +61,10 @@ private object Frontend {
                 .mkString(",")}]".stripMargin),
       opt[String]("output")
         .action((x, c) => c.withOutputDirectory(x))
-        .text("Directory for type-stubs output")
+        .text("Directory for type-stubs output"),
+      opt[Unit]("useSubset")
+        .action((_, c) => c.withUseSubset(true))
+        .text("Only scrape the first 10 gems and generate types")
     )
   }
 }
@@ -81,7 +89,11 @@ object Main {
 
   def run(config: Config): Unit = {
     if config.languageFrontend == Frontend.ALL || config.languageFrontend == Languages.RUBYSRC then
-      val rubyScraper = BuiltinPackageDownloader(outputDir = config.outputDirectory, format = config.format)
+      val rubyScraper = BuiltinPackageDownloader(
+        outputDir = config.outputDirectory,
+        format = config.format,
+        useSubset = config.useSubset
+      )
       rubyScraper.run()
   }
 }
