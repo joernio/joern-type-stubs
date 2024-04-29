@@ -74,7 +74,7 @@ class BuiltinPackageDownloader(
   ): Iterator[() => (String, List[RubyType])] = {
     logger.info("[Ruby]: Generating Ruby Types for builtin functions")
 
-    if useSubset then generateRubyTypes(pathsMap.slice(0, 20))
+    if useSubset then generateRubyTypes(pathsMap.slice(0, 10))
     else generateRubyTypes(pathsMap)
   }
 
